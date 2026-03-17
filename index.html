@@ -1,0 +1,1575 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.8.27">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Chantal">
+<meta name="dcterms.date" content="2026-03-17">
+
+<title>Raster Processing: terra &amp; GDAL – Raster &amp; GDAL Processing</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-ed96de9b727972fe78a7b5d16c58bf87.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-ffa9a6279353761231ec249df0a7fdd3.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+</head>
+
+<body class="quarto-light">
+
+<div id="quarto-search-results"></div>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#setup" id="toc-setup" class="nav-link active" data-scroll-target="#setup">Setup</a></li>
+  <li><a href="#task-1-forest-per-canton-with-terra" id="toc-task-1-forest-per-canton-with-terra" class="nav-link" data-scroll-target="#task-1-forest-per-canton-with-terra">Task 1 — Forest per Canton with <code>terra</code></a>
+  <ul class="collapse">
+  <li><a href="#step-1-load-canton-boundaries" id="toc-step-1-load-canton-boundaries" class="nav-link" data-scroll-target="#step-1-load-canton-boundaries">Step 1: Load canton boundaries</a></li>
+  <li><a href="#step-2-load-and-filter-forest-polygons" id="toc-step-2-load-and-filter-forest-polygons" class="nav-link" data-scroll-target="#step-2-load-and-filter-forest-polygons">Step 2: Load and filter forest polygons</a></li>
+  <li><a href="#step-3-check-and-align-crs" id="toc-step-3-check-and-align-crs" class="nav-link" data-scroll-target="#step-3-check-and-align-crs">Step 3: Check and align CRS</a></li>
+  <li><a href="#step-4-spatial-intersection" id="toc-step-4-spatial-intersection" class="nav-link" data-scroll-target="#step-4-spatial-intersection">Step 4: Spatial intersection</a></li>
+  <li><a href="#step-5-calculate-forest-percentage-per-canton" id="toc-step-5-calculate-forest-percentage-per-canton" class="nav-link" data-scroll-target="#step-5-calculate-forest-percentage-per-canton">Step 5: Calculate forest percentage per canton</a></li>
+  <li><a href="#results" id="toc-results" class="nav-link" data-scroll-target="#results">Results</a></li>
+  </ul></li>
+  <li><a href="#task-2-forest-per-canton-with-gdal" id="toc-task-2-forest-per-canton-with-gdal" class="nav-link" data-scroll-target="#task-2-forest-per-canton-with-gdal">Task 2 — Forest per Canton with GDAL</a>
+  <ul class="collapse">
+  <li><a href="#step-1-reproject-export-canton-boundaries" id="toc-step-1-reproject-export-canton-boundaries" class="nav-link" data-scroll-target="#step-1-reproject-export-canton-boundaries">Step 1: Reproject / export canton boundaries</a></li>
+  <li><a href="#step-2-extract-forest-polygons" id="toc-step-2-extract-forest-polygons" class="nav-link" data-scroll-target="#step-2-extract-forest-polygons">Step 2: Extract forest polygons</a></li>
+  <li><a href="#step-3-spatial-intersection" id="toc-step-3-spatial-intersection" class="nav-link" data-scroll-target="#step-3-spatial-intersection">Step 3: Spatial intersection</a></li>
+  <li><a href="#step-4-aggregate-per-canton" id="toc-step-4-aggregate-per-canton" class="nav-link" data-scroll-target="#step-4-aggregate-per-canton">Step 4: Aggregate per canton</a></li>
+  <li><a href="#step-5-calculate-percentages-in-r" id="toc-step-5-calculate-percentages-in-r" class="nav-link" data-scroll-target="#step-5-calculate-percentages-in-r">Step 5: Calculate percentages in R</a></li>
+  </ul></li>
+  <li><a href="#task-3-execution-time-comparison" id="toc-task-3-execution-time-comparison" class="nav-link" data-scroll-target="#task-3-execution-time-comparison">Task 3 — Execution Time Comparison</a>
+  <ul class="collapse">
+  <li><a href="#discussion" id="toc-discussion" class="nav-link" data-scroll-target="#discussion">Discussion</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Raster Processing: terra &amp; GDAL</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Chantal </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">March 17, 2026</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="setup" class="level2">
+<h2 class="anchored" data-anchor-id="setup">Setup</h2>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(sf)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(terra)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyr)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tictoc)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(knitr)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(purrr)</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Clear tictoc log at the start</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>tictoc<span class="sc">::</span><span class="fu">tic.clearlog</span>()</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Data paths</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>path_tlm   <span class="ot">&lt;-</span> <span class="st">"data/SWISSTLM3D_2026_LV95_LN02.gpkg"</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>path_bound <span class="ot">&lt;-</span> <span class="st">"data/swissBOUNDARIES3D_1_5_LV95_LN02.gpkg"</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="co"># Layer names</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>layer_cantons <span class="ot">&lt;-</span> <span class="st">"tlm_kantonsgebiet"</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>layer_forest  <span class="ot">&lt;-</span> <span class="st">"tlm_bb_bodenbedeckung"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<hr>
+</section>
+<section id="task-1-forest-per-canton-with-terra" class="level2">
+<h2 class="anchored" data-anchor-id="task-1-forest-per-canton-with-terra">Task 1 — Forest per Canton with <code>terra</code></h2>
+<p>We repeat the forest-per-canton analysis from Vector Deepdive, this time using the <code>terra</code> package instead of <code>sf</code>. <code>terra</code> calls GDAL/GEOS internally via compiled C++ code, which reduces R overhead and is typically faster than <code>sf</code> for large datasets.</p>
+<section id="step-1-load-canton-boundaries" class="level3">
+<h3 class="anchored" data-anchor-id="step-1-load-canton-boundaries">Step 1: Load canton boundaries</h3>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>tictoc<span class="sc">::</span><span class="fu">tic</span>(<span class="at">msg =</span> <span class="st">"terra | Step 1: Load canton boundaries"</span>)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>cantons <span class="ot">&lt;-</span> terra<span class="sc">::</span><span class="fu">vect</span>(path_bound, <span class="at">layer =</span> layer_cantons)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: [vect] Z coordinates ignored</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>tictoc<span class="sc">::</span><span class="fu">toc</span>(<span class="at">log =</span> <span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>terra | Step 1: Load canton boundaries: 0.09 sec elapsed</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"CRS:              "</span>, terra<span class="sc">::</span><span class="fu">crs</span>(cantons, <span class="at">describe =</span> <span class="cn">TRUE</span>)<span class="sc">$</span>code, <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>CRS:               2056 </code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Number of cantons:"</span>, <span class="fu">nrow</span>(cantons), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Number of cantons: 26 </code></pre>
+</div>
+</div>
+</section>
+<section id="step-2-load-and-filter-forest-polygons" class="level3">
+<h3 class="anchored" data-anchor-id="step-2-load-and-filter-forest-polygons">Step 2: Load and filter forest polygons</h3>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>tictoc<span class="sc">::</span><span class="fu">tic</span>(<span class="at">msg =</span> <span class="st">"terra | Step 2: Load and filter forest polygons"</span>)</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>bb     <span class="ot">&lt;-</span> terra<span class="sc">::</span><span class="fu">vect</span>(path_tlm, <span class="at">layer =</span> layer_forest)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: [vect] Z coordinates ignored</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>forest <span class="ot">&lt;-</span> bb[bb<span class="sc">$</span>objektart <span class="sc">==</span> <span class="st">"Wald"</span>, ]</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>tictoc<span class="sc">::</span><span class="fu">toc</span>(<span class="at">log =</span> <span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>terra | Step 2: Load and filter forest polygons: 17.81 sec elapsed</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Forest polygon count:"</span>, <span class="fu">nrow</span>(forest), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Forest polygon count: 104145 </code></pre>
+</div>
+</div>
+</section>
+<section id="step-3-check-and-align-crs" class="level3">
+<h3 class="anchored" data-anchor-id="step-3-check-and-align-crs">Step 3: Check and align CRS</h3>
+<p>Both datasets are already in LV95 (CH1903+ / EPSG:2056), so no reprojection is needed. We verify this step nonetheless and measure the time.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>tictoc<span class="sc">::</span><span class="fu">tic</span>(<span class="at">msg =</span> <span class="st">"terra | Step 3: Verify CRS alignment"</span>)</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>crs_cantons <span class="ot">&lt;-</span> terra<span class="sc">::</span><span class="fu">crs</span>(cantons, <span class="at">describe =</span> <span class="cn">TRUE</span>)<span class="sc">$</span>code</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>crs_forest  <span class="ot">&lt;-</span> terra<span class="sc">::</span><span class="fu">crs</span>(forest,  <span class="at">describe =</span> <span class="cn">TRUE</span>)<span class="sc">$</span>code</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Canton CRS:"</span>, crs_cantons, <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Canton CRS: 2056 </code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Forest CRS:"</span>, crs_forest,  <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Forest CRS: 2056 </code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"CRS match: "</span>,  crs_cantons <span class="sc">==</span> crs_forest, <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>CRS match:  TRUE </code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Reproject only if needed (not the case here)</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (crs_cantons <span class="sc">!=</span> crs_forest) {</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>  forest <span class="ot">&lt;-</span> terra<span class="sc">::</span><span class="fu">project</span>(forest, terra<span class="sc">::</span><span class="fu">crs</span>(cantons))</span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>tictoc<span class="sc">::</span><span class="fu">toc</span>(<span class="at">log =</span> <span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>terra | Step 3: Verify CRS alignment: 0.02 sec elapsed</code></pre>
+</div>
+</div>
+</section>
+<section id="step-4-spatial-intersection" class="level3">
+<h3 class="anchored" data-anchor-id="step-4-spatial-intersection">Step 4: Spatial intersection</h3>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>tictoc<span class="sc">::</span><span class="fu">tic</span>(<span class="at">msg =</span> <span class="st">"terra | Step 4: Intersect forest with cantons"</span>)</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a><span class="co"># terra::intersect() clips forest polygons to canton boundaries</span></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a><span class="co"># and appends canton attributes to each resulting polygon</span></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>forest_canton <span class="ot">&lt;-</span> terra<span class="sc">::</span><span class="fu">intersect</span>(forest, cantons)</span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>tictoc<span class="sc">::</span><span class="fu">toc</span>(<span class="at">log =</span> <span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>terra | Step 4: Intersect forest with cantons: 189.52 sec elapsed</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Intersection result rows:"</span>, <span class="fu">nrow</span>(forest_canton), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Intersection result rows: 104343 </code></pre>
+</div>
+</div>
+</section>
+<section id="step-5-calculate-forest-percentage-per-canton" class="level3">
+<h3 class="anchored" data-anchor-id="step-5-calculate-forest-percentage-per-canton">Step 5: Calculate forest percentage per canton</h3>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>tictoc<span class="sc">::</span><span class="fu">tic</span>(<span class="at">msg =</span> <span class="st">"terra | Step 5: Calculate forest % per canton"</span>)</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Area of each clipped forest polygon (m²)</span></span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>forest_canton<span class="sc">$</span>forest_area_m2 <span class="ot">&lt;-</span> terra<span class="sc">::</span><span class="fu">expanse</span>(forest_canton, <span class="at">unit =</span> <span class="st">"m"</span>)</span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Sum forest area per canton (group by canton name)</span></span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>forest_sum <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(forest_canton) <span class="sc">|&gt;</span></span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(name) <span class="sc">|&gt;</span></span>
+<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">forest_area_m2 =</span> <span class="fu">sum</span>(forest_area_m2, <span class="at">na.rm =</span> <span class="cn">TRUE</span>), <span class="at">.groups =</span> <span class="st">"drop"</span>)</span>
+<span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-11"><a href="#cb28-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Canton total areas</span></span>
+<span id="cb28-12"><a href="#cb28-12" aria-hidden="true" tabindex="-1"></a>cantons_df <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(cantons)</span>
+<span id="cb28-13"><a href="#cb28-13" aria-hidden="true" tabindex="-1"></a>cantons_df<span class="sc">$</span>canton_area_m2 <span class="ot">&lt;-</span> terra<span class="sc">::</span><span class="fu">expanse</span>(cantons, <span class="at">unit =</span> <span class="st">"m"</span>)</span>
+<span id="cb28-14"><a href="#cb28-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-15"><a href="#cb28-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Join and compute percentage</span></span>
+<span id="cb28-16"><a href="#cb28-16" aria-hidden="true" tabindex="-1"></a>result_terra <span class="ot">&lt;-</span> cantons_df <span class="sc">|&gt;</span></span>
+<span id="cb28-17"><a href="#cb28-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(name, canton_area_m2) <span class="sc">|&gt;</span></span>
+<span id="cb28-18"><a href="#cb28-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(forest_sum, <span class="at">by =</span> <span class="st">"name"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb28-19"><a href="#cb28-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb28-20"><a href="#cb28-20" aria-hidden="true" tabindex="-1"></a>    <span class="at">forest_area_m2 =</span> <span class="fu">replace_na</span>(forest_area_m2, <span class="dv">0</span>),</span>
+<span id="cb28-21"><a href="#cb28-21" aria-hidden="true" tabindex="-1"></a>    <span class="at">forest_pct     =</span> (forest_area_m2 <span class="sc">/</span> canton_area_m2) <span class="sc">*</span> <span class="dv">100</span></span>
+<span id="cb28-22"><a href="#cb28-22" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb28-23"><a href="#cb28-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(forest_pct))</span>
+<span id="cb28-24"><a href="#cb28-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-25"><a href="#cb28-25" aria-hidden="true" tabindex="-1"></a>tictoc<span class="sc">::</span><span class="fu">toc</span>(<span class="at">log =</span> <span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>terra | Step 5: Calculate forest % per canton: 75.14 sec elapsed</code></pre>
+</div>
+</div>
+</section>
+<section id="results" class="level3">
+<h3 class="anchored" data-anchor-id="results">Results</h3>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="fu">kable</span>(</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>  result_terra <span class="sc">|&gt;</span></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(</span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>      <span class="st">`</span><span class="at">Canton Area (km2)</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">round</span>(canton_area_m2 <span class="sc">/</span> <span class="fl">1e6</span>, <span class="dv">1</span>),</span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>      <span class="st">`</span><span class="at">Forest Area (km2)</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">round</span>(forest_area_m2 <span class="sc">/</span> <span class="fl">1e6</span>, <span class="dv">1</span>),</span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>      <span class="st">`</span><span class="at">Forest (%)</span><span class="st">`</span>        <span class="ot">=</span> <span class="fu">round</span>(forest_pct, <span class="dv">2</span>)</span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">|&gt;</span></span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">select</span>(<span class="at">Canton =</span> name,</span>
+<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a>           <span class="st">`</span><span class="at">Canton Area (km2)</span><span class="st">`</span>,</span>
+<span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a>           <span class="st">`</span><span class="at">Forest Area (km2)</span><span class="st">`</span>,</span>
+<span id="cb30-11"><a href="#cb30-11" aria-hidden="true" tabindex="-1"></a>           <span class="st">`</span><span class="at">Forest (%)</span><span class="st">`</span>),</span>
+<span id="cb30-12"><a href="#cb30-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">caption =</span> <span class="st">"Forest coverage per Swiss canton (terra)"</span></span>
+<span id="cb30-13"><a href="#cb30-13" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>Forest coverage per Swiss canton (terra)</caption>
+<colgroup>
+<col style="width: 32%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 15%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Canton</th>
+<th style="text-align: right;">Canton Area (km2)</th>
+<th style="text-align: right;">Forest Area (km2)</th>
+<th style="text-align: right;">Forest (%)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Ticino</td>
+<td style="text-align: right;">2811.7</td>
+<td style="text-align: right;">1193.9</td>
+<td style="text-align: right;">42.46</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Schaffhausen</td>
+<td style="text-align: right;">298.4</td>
+<td style="text-align: right;">125.5</td>
+<td style="text-align: right;">42.05</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Solothurn</td>
+<td style="text-align: right;">790.4</td>
+<td style="text-align: right;">319.9</td>
+<td style="text-align: right;">40.47</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Jura</td>
+<td style="text-align: right;">858.1</td>
+<td style="text-align: right;">344.2</td>
+<td style="text-align: right;">40.11</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Basel-Landschaft</td>
+<td style="text-align: right;">517.6</td>
+<td style="text-align: right;">202.6</td>
+<td style="text-align: right;">39.14</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Obwalden</td>
+<td style="text-align: right;">490.6</td>
+<td style="text-align: right;">174.2</td>
+<td style="text-align: right;">35.51</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Aargau</td>
+<td style="text-align: right;">1403.7</td>
+<td style="text-align: right;">489.9</td>
+<td style="text-align: right;">34.90</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Neuchâtel</td>
+<td style="text-align: right;">802.1</td>
+<td style="text-align: right;">274.3</td>
+<td style="text-align: right;">34.19</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Appenzell Ausserrhoden</td>
+<td style="text-align: right;">242.8</td>
+<td style="text-align: right;">76.6</td>
+<td style="text-align: right;">31.56</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Nidwalden</td>
+<td style="text-align: right;">275.8</td>
+<td style="text-align: right;">83.5</td>
+<td style="text-align: right;">30.27</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Schwyz</td>
+<td style="text-align: right;">907.9</td>
+<td style="text-align: right;">270.8</td>
+<td style="text-align: right;">29.83</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Vaud</td>
+<td style="text-align: right;">3211.8</td>
+<td style="text-align: right;">944.7</td>
+<td style="text-align: right;">29.41</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Zürich</td>
+<td style="text-align: right;">1728.8</td>
+<td style="text-align: right;">503.2</td>
+<td style="text-align: right;">29.10</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Bern</td>
+<td style="text-align: right;">5938.7</td>
+<td style="text-align: right;">1666.2</td>
+<td style="text-align: right;">28.06</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Appenzell Innerrhoden</td>
+<td style="text-align: right;">172.5</td>
+<td style="text-align: right;">47.2</td>
+<td style="text-align: right;">27.38</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Luzern</td>
+<td style="text-align: right;">1493.5</td>
+<td style="text-align: right;">406.6</td>
+<td style="text-align: right;">27.23</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">St.&nbsp;Gallen</td>
+<td style="text-align: right;">2028.1</td>
+<td style="text-align: right;">536.6</td>
+<td style="text-align: right;">26.46</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Zug</td>
+<td style="text-align: right;">238.7</td>
+<td style="text-align: right;">62.4</td>
+<td style="text-align: right;">26.12</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Fribourg</td>
+<td style="text-align: right;">1672.4</td>
+<td style="text-align: right;">417.9</td>
+<td style="text-align: right;">24.99</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Glarus</td>
+<td style="text-align: right;">685.3</td>
+<td style="text-align: right;">166.2</td>
+<td style="text-align: right;">24.25</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Graubünden</td>
+<td style="text-align: right;">7105.0</td>
+<td style="text-align: right;">1614.7</td>
+<td style="text-align: right;">22.73</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Thurgau</td>
+<td style="text-align: right;">994.2</td>
+<td style="text-align: right;">199.8</td>
+<td style="text-align: right;">20.09</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Valais</td>
+<td style="text-align: right;">5223.6</td>
+<td style="text-align: right;">1047.2</td>
+<td style="text-align: right;">20.05</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Uri</td>
+<td style="text-align: right;">1076.5</td>
+<td style="text-align: right;">154.4</td>
+<td style="text-align: right;">14.35</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Basel-Stadt</td>
+<td style="text-align: right;">36.9</td>
+<td style="text-align: right;">4.7</td>
+<td style="text-align: right;">12.59</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Genève</td>
+<td style="text-align: right;">282.4</td>
+<td style="text-align: right;">32.7</td>
+<td style="text-align: right;">11.59</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(result_terra,</span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>       <span class="fu">aes</span>(<span class="at">x =</span> <span class="fu">reorder</span>(name, forest_pct), <span class="at">y =</span> forest_pct)) <span class="sc">+</span></span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>(<span class="at">fill =</span> <span class="st">"#2d6a4f"</span>) <span class="sc">+</span></span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_flip</span>() <span class="sc">+</span></span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">title    =</span> <span class="st">"Forest Coverage per Swiss Canton"</span>,</span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"Calculated with terra"</span>,</span>
+<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">x        =</span> <span class="cn">NULL</span>,</span>
+<span id="cb31-9"><a href="#cb31-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">y        =</span> <span class="st">"Forest (%)"</span></span>
+<span id="cb31-10"><a href="#cb31-10" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb31-11"><a href="#cb31-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>(<span class="at">base_size =</span> <span class="dv">11</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="index_files/figure-html/terra-plot-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<hr>
+</section>
+</section>
+<section id="task-2-forest-per-canton-with-gdal" class="level2">
+<h2 class="anchored" data-anchor-id="task-2-forest-per-canton-with-gdal">Task 2 — Forest per Canton with GDAL</h2>
+<p>We repeat the same analysis using GDAL. On Windows, the GDAL command-line tools are not available in the system terminal by default. We therefore use <code>sf::gdal_utils()</code>, which is the official R interface to the GDAL library bundled with the <code>sf</code> package — this calls the exact same underlying GDAL C library as <code>ogr2ogr</code> on the command line.</p>
+<p>The timing workaround (tictoc in R chunks around GDAL calls) is the same approach as shown in the assignment for bash chunks.</p>
+<section id="step-1-reproject-export-canton-boundaries" class="level3">
+<h3 class="anchored" data-anchor-id="step-1-reproject-export-canton-boundaries">Step 1: Reproject / export canton boundaries</h3>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>tictoc<span class="sc">::</span><span class="fu">tic</span>(<span class="at">msg =</span> <span class="st">"gdal | Step 1: Export cantons via GDAL (ogr2ogr)"</span>)</span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a><span class="co"># gdal_utils("vectortranslate") is equivalent to ogr2ogr on the command line</span></span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>sf<span class="sc">::</span><span class="fu">gdal_utils</span>(</span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">util      =</span> <span class="st">"vectortranslate"</span>,</span>
+<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">source    =</span> path_bound,</span>
+<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">destination =</span> <span class="st">"data/cantons_gdal.gpkg"</span>,</span>
+<span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">options   =</span> <span class="fu">c</span>(</span>
+<span id="cb32-9"><a href="#cb32-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">"-f"</span>, <span class="st">"GPKG"</span>,</span>
+<span id="cb32-10"><a href="#cb32-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">"-nln"</span>, <span class="st">"kantonsgebiet"</span>,</span>
+<span id="cb32-11"><a href="#cb32-11" aria-hidden="true" tabindex="-1"></a>    <span class="st">"-sql"</span>, <span class="fu">paste0</span>(<span class="st">"SELECT * FROM "</span>, layer_cantons),</span>
+<span id="cb32-12"><a href="#cb32-12" aria-hidden="true" tabindex="-1"></a>    <span class="st">"-overwrite"</span></span>
+<span id="cb32-13"><a href="#cb32-13" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb32-14"><a href="#cb32-14" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb32-15"><a href="#cb32-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-16"><a href="#cb32-16" aria-hidden="true" tabindex="-1"></a>tictoc<span class="sc">::</span><span class="fu">toc</span>(<span class="at">log =</span> <span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>gdal | Step 1: Export cantons via GDAL (ogr2ogr): 0.28 sec elapsed</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"cantons_gdal.gpkg created.</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>cantons_gdal.gpkg created.</code></pre>
+</div>
+</div>
+</section>
+<section id="step-2-extract-forest-polygons" class="level3">
+<h3 class="anchored" data-anchor-id="step-2-extract-forest-polygons">Step 2: Extract forest polygons</h3>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>tictoc<span class="sc">::</span><span class="fu">tic</span>(<span class="at">msg =</span> <span class="st">"gdal | Step 2: Extract forest polygons via GDAL"</span>)</span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>sf<span class="sc">::</span><span class="fu">gdal_utils</span>(</span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">util        =</span> <span class="st">"vectortranslate"</span>,</span>
+<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">source      =</span> path_tlm,</span>
+<span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">destination =</span> <span class="st">"data/forest_gdal.gpkg"</span>,</span>
+<span id="cb36-7"><a href="#cb36-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">options     =</span> <span class="fu">c</span>(</span>
+<span id="cb36-8"><a href="#cb36-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">"-f"</span>, <span class="st">"GPKG"</span>,</span>
+<span id="cb36-9"><a href="#cb36-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">"-sql"</span>, <span class="fu">paste0</span>(</span>
+<span id="cb36-10"><a href="#cb36-10" aria-hidden="true" tabindex="-1"></a>      <span class="st">"SELECT * FROM "</span>, layer_forest,</span>
+<span id="cb36-11"><a href="#cb36-11" aria-hidden="true" tabindex="-1"></a>      <span class="st">" WHERE objektart = 'Wald'"</span></span>
+<span id="cb36-12"><a href="#cb36-12" aria-hidden="true" tabindex="-1"></a>    ),</span>
+<span id="cb36-13"><a href="#cb36-13" aria-hidden="true" tabindex="-1"></a>    <span class="st">"-overwrite"</span></span>
+<span id="cb36-14"><a href="#cb36-14" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb36-15"><a href="#cb36-15" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb36-16"><a href="#cb36-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-17"><a href="#cb36-17" aria-hidden="true" tabindex="-1"></a>tictoc<span class="sc">::</span><span class="fu">toc</span>(<span class="at">log =</span> <span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>gdal | Step 2: Extract forest polygons via GDAL: 21.77 sec elapsed</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"forest_gdal.gpkg created.</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>forest_gdal.gpkg created.</code></pre>
+</div>
+</div>
+</section>
+<section id="step-3-spatial-intersection" class="level3">
+<h3 class="anchored" data-anchor-id="step-3-spatial-intersection">Step 3: Spatial intersection</h3>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>tictoc<span class="sc">::</span><span class="fu">tic</span>(<span class="at">msg =</span> <span class="st">"gdal | Step 3: Spatial intersection via sf (GDAL backend)"</span>)</span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Load both layers</span></span>
+<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a>forest_gdal  <span class="ot">&lt;-</span> sf<span class="sc">::</span><span class="fu">st_read</span>(<span class="st">"data/forest_gdal.gpkg"</span>,  <span class="at">quiet =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb40-5"><a href="#cb40-5" aria-hidden="true" tabindex="-1"></a>cantons_gdal <span class="ot">&lt;-</span> sf<span class="sc">::</span><span class="fu">st_read</span>(<span class="st">"data/cantons_gdal.gpkg"</span>, <span class="at">quiet =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb40-6"><a href="#cb40-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb40-7"><a href="#cb40-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Intersection (sf uses GDAL/GEOS internally)</span></span>
+<span id="cb40-8"><a href="#cb40-8" aria-hidden="true" tabindex="-1"></a>forest_canton_gdal <span class="ot">&lt;-</span> sf<span class="sc">::</span><span class="fu">st_intersection</span>(forest_gdal, cantons_gdal)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: attribute variables are assumed to be spatially constant throughout
+all geometries</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb42"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a>forest_canton_gdal<span class="sc">$</span>forest_area_m2 <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(sf<span class="sc">::</span><span class="fu">st_area</span>(forest_canton_gdal))</span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Save for next step</span></span>
+<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a>sf<span class="sc">::</span><span class="fu">st_write</span>(forest_canton_gdal, <span class="st">"data/forest_canton_gdal.gpkg"</span>, </span>
+<span id="cb42-5"><a href="#cb42-5" aria-hidden="true" tabindex="-1"></a>             <span class="at">delete_dsn =</span> <span class="cn">TRUE</span>, <span class="at">quiet =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb42-6"><a href="#cb42-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb42-7"><a href="#cb42-7" aria-hidden="true" tabindex="-1"></a>tictoc<span class="sc">::</span><span class="fu">toc</span>(<span class="at">log =</span> <span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>gdal | Step 3: Spatial intersection via sf (GDAL backend): 239.77 sec elapsed</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb44"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Intersection rows:"</span>, <span class="fu">nrow</span>(forest_canton_gdal), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Intersection rows: 104343 </code></pre>
+</div>
+</div>
+</section>
+<section id="step-4-aggregate-per-canton" class="level3">
+<h3 class="anchored" data-anchor-id="step-4-aggregate-per-canton">Step 4: Aggregate per canton</h3>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb46"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a>tictoc<span class="sc">::</span><span class="fu">tic</span>(<span class="at">msg =</span> <span class="st">"gdal | Step 4: Aggregate forest area per canton"</span>)</span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Aggregate directly in R using the result from step 3</span></span>
+<span id="cb46-4"><a href="#cb46-4" aria-hidden="true" tabindex="-1"></a>forest_by_canton_gdal <span class="ot">&lt;-</span> forest_canton_gdal <span class="sc">|&gt;</span></span>
+<span id="cb46-5"><a href="#cb46-5" aria-hidden="true" tabindex="-1"></a>  sf<span class="sc">::</span><span class="fu">st_drop_geometry</span>() <span class="sc">|&gt;</span></span>
+<span id="cb46-6"><a href="#cb46-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(name) <span class="sc">|&gt;</span></span>
+<span id="cb46-7"><a href="#cb46-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">forest_area_m2 =</span> <span class="fu">sum</span>(forest_area_m2, <span class="at">na.rm =</span> <span class="cn">TRUE</span>), <span class="at">.groups =</span> <span class="st">"drop"</span>)</span>
+<span id="cb46-8"><a href="#cb46-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb46-9"><a href="#cb46-9" aria-hidden="true" tabindex="-1"></a>tictoc<span class="sc">::</span><span class="fu">toc</span>(<span class="at">log =</span> <span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>gdal | Step 4: Aggregate forest area per canton: 0.02 sec elapsed</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb48"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Cantons aggregated:"</span>, <span class="fu">nrow</span>(forest_by_canton_gdal), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Cantons aggregated: 26 </code></pre>
+</div>
+</div>
+</section>
+<section id="step-5-calculate-percentages-in-r" class="level3">
+<h3 class="anchored" data-anchor-id="step-5-calculate-percentages-in-r">Step 5: Calculate percentages in R</h3>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb50"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a>tictoc<span class="sc">::</span><span class="fu">tic</span>(<span class="at">msg =</span> <span class="st">"gdal | Step 5: Join and compute percentages in R"</span>)</span>
+<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a>cantons_sf <span class="ot">&lt;-</span> sf<span class="sc">::</span><span class="fu">st_read</span>(<span class="st">"data/cantons_gdal.gpkg"</span>, <span class="at">quiet =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb50-4"><a href="#cb50-4" aria-hidden="true" tabindex="-1"></a>cantons_sf<span class="sc">$</span>canton_area_m2 <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(sf<span class="sc">::</span><span class="fu">st_area</span>(cantons_sf))</span>
+<span id="cb50-5"><a href="#cb50-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-6"><a href="#cb50-6" aria-hidden="true" tabindex="-1"></a>result_gdal <span class="ot">&lt;-</span> cantons_sf <span class="sc">|&gt;</span></span>
+<span id="cb50-7"><a href="#cb50-7" aria-hidden="true" tabindex="-1"></a>  sf<span class="sc">::</span><span class="fu">st_drop_geometry</span>() <span class="sc">|&gt;</span></span>
+<span id="cb50-8"><a href="#cb50-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(name, canton_area_m2) <span class="sc">|&gt;</span></span>
+<span id="cb50-9"><a href="#cb50-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(forest_by_canton_gdal, <span class="at">by =</span> <span class="st">"name"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb50-10"><a href="#cb50-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb50-11"><a href="#cb50-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">forest_area_m2 =</span> <span class="fu">replace_na</span>(forest_area_m2, <span class="dv">0</span>),</span>
+<span id="cb50-12"><a href="#cb50-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">forest_pct     =</span> (forest_area_m2 <span class="sc">/</span> canton_area_m2) <span class="sc">*</span> <span class="dv">100</span></span>
+<span id="cb50-13"><a href="#cb50-13" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb50-14"><a href="#cb50-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(forest_pct))</span>
+<span id="cb50-15"><a href="#cb50-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-16"><a href="#cb50-16" aria-hidden="true" tabindex="-1"></a>tictoc<span class="sc">::</span><span class="fu">toc</span>(<span class="at">log =</span> <span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>gdal | Step 5: Join and compute percentages in R: 0.2 sec elapsed</code></pre>
+</div>
+</div>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb52"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="fu">kable</span>(</span>
+<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a>  result_gdal <span class="sc">|&gt;</span></span>
+<span id="cb52-3"><a href="#cb52-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(</span>
+<span id="cb52-4"><a href="#cb52-4" aria-hidden="true" tabindex="-1"></a>      <span class="st">`</span><span class="at">Canton Area (km2)</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">round</span>(canton_area_m2 <span class="sc">/</span> <span class="fl">1e6</span>, <span class="dv">1</span>),</span>
+<span id="cb52-5"><a href="#cb52-5" aria-hidden="true" tabindex="-1"></a>      <span class="st">`</span><span class="at">Forest Area (km2)</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">round</span>(forest_area_m2 <span class="sc">/</span> <span class="fl">1e6</span>, <span class="dv">1</span>),</span>
+<span id="cb52-6"><a href="#cb52-6" aria-hidden="true" tabindex="-1"></a>      <span class="st">`</span><span class="at">Forest (%)</span><span class="st">`</span>        <span class="ot">=</span> <span class="fu">round</span>(forest_pct, <span class="dv">2</span>)</span>
+<span id="cb52-7"><a href="#cb52-7" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">|&gt;</span></span>
+<span id="cb52-8"><a href="#cb52-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">select</span>(<span class="at">Canton =</span> name,</span>
+<span id="cb52-9"><a href="#cb52-9" aria-hidden="true" tabindex="-1"></a>           <span class="st">`</span><span class="at">Canton Area (km2)</span><span class="st">`</span>,</span>
+<span id="cb52-10"><a href="#cb52-10" aria-hidden="true" tabindex="-1"></a>           <span class="st">`</span><span class="at">Forest Area (km2)</span><span class="st">`</span>,</span>
+<span id="cb52-11"><a href="#cb52-11" aria-hidden="true" tabindex="-1"></a>           <span class="st">`</span><span class="at">Forest (%)</span><span class="st">`</span>),</span>
+<span id="cb52-12"><a href="#cb52-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">caption =</span> <span class="st">"Forest coverage per Swiss canton (GDAL)"</span></span>
+<span id="cb52-13"><a href="#cb52-13" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>Forest coverage per Swiss canton (GDAL)</caption>
+<colgroup>
+<col style="width: 32%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 15%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Canton</th>
+<th style="text-align: right;">Canton Area (km2)</th>
+<th style="text-align: right;">Forest Area (km2)</th>
+<th style="text-align: right;">Forest (%)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Ticino</td>
+<td style="text-align: right;">2812.2</td>
+<td style="text-align: right;">1194.1</td>
+<td style="text-align: right;">42.46</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Schaffhausen</td>
+<td style="text-align: right;">298.4</td>
+<td style="text-align: right;">125.5</td>
+<td style="text-align: right;">42.05</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Solothurn</td>
+<td style="text-align: right;">790.5</td>
+<td style="text-align: right;">319.9</td>
+<td style="text-align: right;">40.47</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Jura</td>
+<td style="text-align: right;">858.1</td>
+<td style="text-align: right;">344.2</td>
+<td style="text-align: right;">40.11</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Basel-Landschaft</td>
+<td style="text-align: right;">517.7</td>
+<td style="text-align: right;">202.6</td>
+<td style="text-align: right;">39.14</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Obwalden</td>
+<td style="text-align: right;">490.6</td>
+<td style="text-align: right;">174.2</td>
+<td style="text-align: right;">35.51</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Aargau</td>
+<td style="text-align: right;">1403.8</td>
+<td style="text-align: right;">489.9</td>
+<td style="text-align: right;">34.90</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Neuchâtel</td>
+<td style="text-align: right;">802.2</td>
+<td style="text-align: right;">274.3</td>
+<td style="text-align: right;">34.19</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Appenzell Ausserrhoden</td>
+<td style="text-align: right;">242.8</td>
+<td style="text-align: right;">76.6</td>
+<td style="text-align: right;">31.56</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Nidwalden</td>
+<td style="text-align: right;">275.8</td>
+<td style="text-align: right;">83.5</td>
+<td style="text-align: right;">30.27</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Schwyz</td>
+<td style="text-align: right;">907.9</td>
+<td style="text-align: right;">270.9</td>
+<td style="text-align: right;">29.83</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Vaud</td>
+<td style="text-align: right;">3212.0</td>
+<td style="text-align: right;">944.7</td>
+<td style="text-align: right;">29.41</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Zürich</td>
+<td style="text-align: right;">1728.9</td>
+<td style="text-align: right;">503.2</td>
+<td style="text-align: right;">29.10</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Bern</td>
+<td style="text-align: right;">5938.9</td>
+<td style="text-align: right;">1666.2</td>
+<td style="text-align: right;">28.06</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Appenzell Innerrhoden</td>
+<td style="text-align: right;">172.5</td>
+<td style="text-align: right;">47.2</td>
+<td style="text-align: right;">27.38</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Luzern</td>
+<td style="text-align: right;">1493.5</td>
+<td style="text-align: right;">406.6</td>
+<td style="text-align: right;">27.23</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">St.&nbsp;Gallen</td>
+<td style="text-align: right;">2028.2</td>
+<td style="text-align: right;">536.6</td>
+<td style="text-align: right;">26.46</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Zug</td>
+<td style="text-align: right;">238.7</td>
+<td style="text-align: right;">62.4</td>
+<td style="text-align: right;">26.12</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Fribourg</td>
+<td style="text-align: right;">1672.4</td>
+<td style="text-align: right;">417.9</td>
+<td style="text-align: right;">24.99</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Glarus</td>
+<td style="text-align: right;">685.3</td>
+<td style="text-align: right;">166.2</td>
+<td style="text-align: right;">24.25</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Graubünden</td>
+<td style="text-align: right;">7105.3</td>
+<td style="text-align: right;">1614.8</td>
+<td style="text-align: right;">22.73</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Thurgau</td>
+<td style="text-align: right;">994.3</td>
+<td style="text-align: right;">199.8</td>
+<td style="text-align: right;">20.09</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Valais</td>
+<td style="text-align: right;">5224.6</td>
+<td style="text-align: right;">1047.4</td>
+<td style="text-align: right;">20.05</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Uri</td>
+<td style="text-align: right;">1076.5</td>
+<td style="text-align: right;">154.4</td>
+<td style="text-align: right;">14.35</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Basel-Stadt</td>
+<td style="text-align: right;">37.0</td>
+<td style="text-align: right;">4.7</td>
+<td style="text-align: right;">12.59</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Genève</td>
+<td style="text-align: right;">282.5</td>
+<td style="text-align: right;">32.7</td>
+<td style="text-align: right;">11.59</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<hr>
+</section>
+</section>
+<section id="task-3-execution-time-comparison" class="level2">
+<h2 class="anchored" data-anchor-id="task-3-execution-time-comparison">Task 3 — Execution Time Comparison</h2>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb53"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a>log_raw   <span class="ot">&lt;-</span> tictoc<span class="sc">::</span><span class="fu">tic.log</span>(<span class="at">format =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb53-3"><a href="#cb53-3" aria-hidden="true" tabindex="-1"></a>timing_df <span class="ot">&lt;-</span> <span class="fu">map_df</span>(log_raw, <span class="cf">function</span>(x) {</span>
+<span id="cb53-4"><a href="#cb53-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tibble</span>(</span>
+<span id="cb53-5"><a href="#cb53-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">step     =</span> x<span class="sc">$</span>msg,</span>
+<span id="cb53-6"><a href="#cb53-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">time_sec =</span> <span class="fu">as.numeric</span>(x<span class="sc">$</span>toc <span class="sc">-</span> x<span class="sc">$</span>tic)</span>
+<span id="cb53-7"><a href="#cb53-7" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb53-8"><a href="#cb53-8" aria-hidden="true" tabindex="-1"></a>}) <span class="sc">|&gt;</span></span>
+<span id="cb53-9"><a href="#cb53-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb53-10"><a href="#cb53-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">approach =</span> <span class="fu">case_when</span>(</span>
+<span id="cb53-11"><a href="#cb53-11" aria-hidden="true" tabindex="-1"></a>      <span class="fu">startsWith</span>(step, <span class="st">"terra"</span>) <span class="sc">~</span> <span class="st">"terra"</span>,</span>
+<span id="cb53-12"><a href="#cb53-12" aria-hidden="true" tabindex="-1"></a>      <span class="fu">startsWith</span>(step, <span class="st">"gdal"</span>)  <span class="sc">~</span> <span class="st">"GDAL"</span>,</span>
+<span id="cb53-13"><a href="#cb53-13" aria-hidden="true" tabindex="-1"></a>      <span class="cn">TRUE</span>                      <span class="sc">~</span> <span class="st">"other"</span></span>
+<span id="cb53-14"><a href="#cb53-14" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb53-15"><a href="#cb53-15" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb53-16"><a href="#cb53-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb53-17"><a href="#cb53-17" aria-hidden="true" tabindex="-1"></a><span class="fu">kable</span>(</span>
+<span id="cb53-18"><a href="#cb53-18" aria-hidden="true" tabindex="-1"></a>  timing_df <span class="sc">|&gt;</span></span>
+<span id="cb53-19"><a href="#cb53-19" aria-hidden="true" tabindex="-1"></a>    <span class="fu">select</span>(<span class="at">Step =</span> step, <span class="st">`</span><span class="at">Time (s)</span><span class="st">`</span> <span class="ot">=</span> time_sec, <span class="at">Approach =</span> approach) <span class="sc">|&gt;</span></span>
+<span id="cb53-20"><a href="#cb53-20" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="st">`</span><span class="at">Time (s)</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">round</span>(<span class="st">`</span><span class="at">Time (s)</span><span class="st">`</span>, <span class="dv">3</span>)),</span>
+<span id="cb53-21"><a href="#cb53-21" aria-hidden="true" tabindex="-1"></a>  <span class="at">caption =</span> <span class="st">"Execution time per step"</span></span>
+<span id="cb53-22"><a href="#cb53-22" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>Execution time per step</caption>
+<colgroup>
+<col style="width: 77%">
+<col style="width: 11%">
+<col style="width: 11%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Step</th>
+<th style="text-align: right;">Time (s)</th>
+<th style="text-align: left;">Approach</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">terra | Step 1: Load canton boundaries</td>
+<td style="text-align: right;">0.09</td>
+<td style="text-align: left;">terra</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">terra | Step 2: Load and filter forest polygons</td>
+<td style="text-align: right;">17.81</td>
+<td style="text-align: left;">terra</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">terra | Step 3: Verify CRS alignment</td>
+<td style="text-align: right;">0.02</td>
+<td style="text-align: left;">terra</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">terra | Step 4: Intersect forest with cantons</td>
+<td style="text-align: right;">189.52</td>
+<td style="text-align: left;">terra</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">terra | Step 5: Calculate forest % per canton</td>
+<td style="text-align: right;">75.14</td>
+<td style="text-align: left;">terra</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">gdal | Step 1: Export cantons via GDAL (ogr2ogr)</td>
+<td style="text-align: right;">0.28</td>
+<td style="text-align: left;">GDAL</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">gdal | Step 2: Extract forest polygons via GDAL</td>
+<td style="text-align: right;">21.77</td>
+<td style="text-align: left;">GDAL</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">gdal | Step 3: Spatial intersection via sf (GDAL backend)</td>
+<td style="text-align: right;">239.77</td>
+<td style="text-align: left;">GDAL</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">gdal | Step 4: Aggregate forest area per canton</td>
+<td style="text-align: right;">0.02</td>
+<td style="text-align: left;">GDAL</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">gdal | Step 5: Join and compute percentages in R</td>
+<td style="text-align: right;">0.20</td>
+<td style="text-align: left;">GDAL</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb54"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a>terra_total <span class="ot">&lt;-</span> <span class="fu">sum</span>(timing_df<span class="sc">$</span>time_sec[timing_df<span class="sc">$</span>approach <span class="sc">==</span> <span class="st">"terra"</span>])</span>
+<span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a>gdal_total  <span class="ot">&lt;-</span> <span class="fu">sum</span>(timing_df<span class="sc">$</span>time_sec[timing_df<span class="sc">$</span>approach <span class="sc">==</span> <span class="st">"GDAL"</span>])</span>
+<span id="cb54-3"><a href="#cb54-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb54-4"><a href="#cb54-4" aria-hidden="true" tabindex="-1"></a><span class="co"># ── Insert your measured times from previous weeks here (in seconds) ──────────</span></span>
+<span id="cb54-5"><a href="#cb54-5" aria-hidden="true" tabindex="-1"></a>sf_total     <span class="ot">&lt;-</span> <span class="fl">325.12</span>   <span class="co">#  from your sf assignment</span></span>
+<span id="cb54-6"><a href="#cb54-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb54-7"><a href="#cb54-7" aria-hidden="true" tabindex="-1"></a>duckdb_total <span class="ot">&lt;-</span> <span class="fl">243.29</span>   <span class="co">#  from your DuckDB assignment</span></span>
+<span id="cb54-8"><a href="#cb54-8" aria-hidden="true" tabindex="-1"></a><span class="co"># ─────────────────────────────────────────────────────────────────────────────</span></span>
+<span id="cb54-9"><a href="#cb54-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb54-10"><a href="#cb54-10" aria-hidden="true" tabindex="-1"></a>comparison_df <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
+<span id="cb54-11"><a href="#cb54-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">Approach  =</span> <span class="fu">c</span>(<span class="st">"GeoPandas"</span>, <span class="st">"DuckDB"</span>, <span class="st">"terra"</span>, <span class="st">"GDAL"</span>),</span>
+<span id="cb54-12"><a href="#cb54-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">total_sec =</span> <span class="fu">c</span>(sf_total, duckdb_total, terra_total, gdal_total)</span>
+<span id="cb54-13"><a href="#cb54-13" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb54-14"><a href="#cb54-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb54-15"><a href="#cb54-15" aria-hidden="true" tabindex="-1"></a><span class="fu">kable</span>(</span>
+<span id="cb54-16"><a href="#cb54-16" aria-hidden="true" tabindex="-1"></a>  comparison_df <span class="sc">|&gt;</span></span>
+<span id="cb54-17"><a href="#cb54-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(total_sec)) <span class="sc">|&gt;</span></span>
+<span id="cb54-18"><a href="#cb54-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">arrange</span>(total_sec) <span class="sc">|&gt;</span></span>
+<span id="cb54-19"><a href="#cb54-19" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">total_sec =</span> <span class="fu">round</span>(total_sec, <span class="dv">2</span>)),</span>
+<span id="cb54-20"><a href="#cb54-20" aria-hidden="true" tabindex="-1"></a>  <span class="at">col.names =</span> <span class="fu">c</span>(<span class="st">"Approach"</span>, <span class="st">"Total time (s)"</span>),</span>
+<span id="cb54-21"><a href="#cb54-21" aria-hidden="true" tabindex="-1"></a>  <span class="at">caption   =</span> <span class="st">"Total execution time per approach"</span></span>
+<span id="cb54-22"><a href="#cb54-22" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>Total execution time per approach</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Approach</th>
+<th style="text-align: right;">Total time (s)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">DuckDB</td>
+<td style="text-align: right;">243.29</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">GDAL</td>
+<td style="text-align: right;">262.04</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">terra</td>
+<td style="text-align: right;">282.58</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">GeoPandas</td>
+<td style="text-align: right;">325.12</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb55"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(</span>
+<span id="cb55-2"><a href="#cb55-2" aria-hidden="true" tabindex="-1"></a>  comparison_df <span class="sc">|&gt;</span> <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(total_sec)),</span>
+<span id="cb55-3"><a href="#cb55-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">aes</span>(<span class="at">x =</span> <span class="fu">reorder</span>(Approach, total_sec), <span class="at">y =</span> total_sec, <span class="at">fill =</span> Approach)</span>
+<span id="cb55-4"><a href="#cb55-4" aria-hidden="true" tabindex="-1"></a>) <span class="sc">+</span></span>
+<span id="cb55-5"><a href="#cb55-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>(<span class="at">show.legend =</span> <span class="cn">FALSE</span>, <span class="at">width =</span> <span class="fl">0.6</span>) <span class="sc">+</span></span>
+<span id="cb55-6"><a href="#cb55-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_flip</span>() <span class="sc">+</span></span>
+<span id="cb55-7"><a href="#cb55-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(</span>
+<span id="cb55-8"><a href="#cb55-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">"GeoPandas"</span>     <span class="ot">=</span> <span class="st">"#4a90d9"</span>,</span>
+<span id="cb55-9"><a href="#cb55-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">"DuckDB"</span> <span class="ot">=</span> <span class="st">"#f5a623"</span>,</span>
+<span id="cb55-10"><a href="#cb55-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">"terra"</span>  <span class="ot">=</span> <span class="st">"#2d6a4f"</span>,</span>
+<span id="cb55-11"><a href="#cb55-11" aria-hidden="true" tabindex="-1"></a>    <span class="st">"GDAL"</span>   <span class="ot">=</span> <span class="st">"#c0392b"</span></span>
+<span id="cb55-12"><a href="#cb55-12" aria-hidden="true" tabindex="-1"></a>  )) <span class="sc">+</span></span>
+<span id="cb55-13"><a href="#cb55-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb55-14"><a href="#cb55-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">title    =</span> <span class="st">"Total Execution Time by Approach"</span>,</span>
+<span id="cb55-15"><a href="#cb55-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"Same task (forest % per canton) — four different tools"</span>,</span>
+<span id="cb55-16"><a href="#cb55-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">x        =</span> <span class="cn">NULL</span>,</span>
+<span id="cb55-17"><a href="#cb55-17" aria-hidden="true" tabindex="-1"></a>    <span class="at">y        =</span> <span class="st">"Total time (seconds)"</span></span>
+<span id="cb55-18"><a href="#cb55-18" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb55-19"><a href="#cb55-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>(<span class="at">base_size =</span> <span class="dv">12</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="index_files/figure-html/timing-plot-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<section id="discussion" class="level3">
+<h3 class="anchored" data-anchor-id="discussion">Discussion</h3>
+<p><strong><code>sf</code></strong> loads data fully into R memory and processes it with GEOS. It is the most convenient for R users (tidy-compatible), but typically the slowest for large datasets because all computation happens in R session memory.</p>
+<p><strong><code>DuckDB</code></strong> pushes spatial operations into a compiled SQL query engine that runs in parallel. It avoids loading the full dataset into R memory upfront, which makes it much faster than <code>sf</code> for large inputs.</p>
+<p><strong><code>terra</code></strong> is designed for raster data but also handles vectors via <code>SpatVector</code>. It calls GDAL/GEOS through compiled C++ internally, which removes most R overhead and makes it noticeably faster than <code>sf</code>.</p>
+<p><strong><code>GDAL</code></strong> (here via <code>sf::gdal_utils()</code>, which calls the same underlying C library as <code>ogr2ogr</code> on the command line) works directly at the library level with minimal overhead. It can stream data without loading everything into RAM, making it very efficient for large files. The trade-off is more verbose syntax.</p>
+<p><strong>Expected ranking (slowest to fastest):</strong><br>
+<code>sf</code> → <code>terra</code> → <code>GDAL</code> ≈ <code>DuckDB</code></p>
+<p>The exact results depend on dataset size and hardware, but compiled/query-engine approaches consistently outperform pure-R solutions as data volume grows.</p>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
