@@ -1,6 +1,6 @@
 ---
 title: "Raster Processing: terra & GDAL"
-author: "Chantal"
+author: "Chantal Fuchs"
 date: today
 format:
   html:
@@ -9,6 +9,14 @@ format:
     code-fold: true
     theme: flatly
 engine: knitr
+---
+
+::: {.callout-note}
+**Declaration of AI Use:** Parts of this submission were developed with the
+assistance of Claude (Anthropic). The AI was used to help with code structure,
+debugging, and R syntax. All results were verified by me.
+:::
+
 ---
 
 ## Setup
@@ -27,14 +35,11 @@ library(knitr)
 library(ggplot2)
 library(purrr)
 
-# Clear tictoc log at the start
 tictoc::tic.clearlog()
 
-# Data paths
 path_tlm   <- "data/SWISSTLM3D_2026_LV95_LN02.gpkg"
 path_bound <- "data/swissBOUNDARIES3D_1_5_LV95_LN02.gpkg"
 
-# Layer names
 layer_cantons <- "tlm_kantonsgebiet"
 layer_forest  <- "tlm_bb_bodenbedeckung"
 ```
@@ -43,9 +48,10 @@ layer_forest  <- "tlm_bb_bodenbedeckung"
 
 ## Task 1 — Forest per Canton with `terra`
 
-We repeat the forest-per-canton analysis from Vector Deepdive, this time using the
-`terra` package instead of `sf`. `terra` calls GDAL/GEOS internally via compiled
-C++ code, which reduces R overhead and is typically faster than `sf` for large datasets.
+This is the same analysis as in Vector Deepdive — calculating forest cover per
+canton — but using the `terra` package instead of `sf`. The main difference is
+that `terra` works with `SpatVector` objects instead of `sf` objects, and it
+calls the underlying C++ code more directly, which is supposed to be faster.
 
 ### Step 1: Load canton boundaries
 
@@ -79,9 +85,6 @@ cat("Forest polygon count:", nrow(forest), "\n")
 
 ### Step 3: Check and align CRS
 
-Both datasets are already in LV95 (CH1903+ / EPSG:2056), so no reprojection is needed.
-We verify this step nonetheless and measure the time.
-
 ```{r}
 #| label: terra-step3
 
@@ -94,7 +97,6 @@ cat("Canton CRS:", crs_cantons, "\n")
 cat("Forest CRS:", crs_forest,  "\n")
 cat("CRS match: ",  crs_cantons == crs_forest, "\n")
 
-# Reproject only if needed (not the case here)
 if (crs_cantons != crs_forest) {
   forest <- terra::project(forest, terra::crs(cantons))
 }
@@ -109,8 +111,6 @@ tictoc::toc(log = TRUE)
 
 tictoc::tic(msg = "terra | Step 4: Intersect forest with cantons")
 
-# terra::intersect() clips forest polygons to canton boundaries
-# and appends canton attributes to each resulting polygon
 forest_canton <- terra::intersect(forest, cantons)
 
 tictoc::toc(log = TRUE)
@@ -125,19 +125,15 @@ cat("Intersection result rows:", nrow(forest_canton), "\n")
 
 tictoc::tic(msg = "terra | Step 5: Calculate forest % per canton")
 
-# Area of each clipped forest polygon (m²)
 forest_canton$forest_area_m2 <- terra::expanse(forest_canton, unit = "m")
 
-# Sum forest area per canton (group by canton name)
 forest_sum <- as.data.frame(forest_canton) |>
   group_by(name) |>
   summarise(forest_area_m2 = sum(forest_area_m2, na.rm = TRUE), .groups = "drop")
 
-# Canton total areas
 cantons_df <- as.data.frame(cantons)
 cantons_df$canton_area_m2 <- terra::expanse(cantons, unit = "m")
 
-# Join and compute percentage
 result_terra <- cantons_df |>
   select(name, canton_area_m2) |>
   left_join(forest_sum, by = "name") |>
@@ -158,13 +154,13 @@ tictoc::toc(log = TRUE)
 kable(
   result_terra |>
     mutate(
-      `Canton Area (km2)` = round(canton_area_m2 / 1e6, 1),
-      `Forest Area (km2)` = round(forest_area_m2 / 1e6, 1),
+      `Canton Area (km²)` = round(canton_area_m2 / 1e6, 1),
+      `Forest Area (km²)` = round(forest_area_m2 / 1e6, 1),
       `Forest (%)`        = round(forest_pct, 2)
     ) |>
     select(Canton = name,
-           `Canton Area (km2)`,
-           `Forest Area (km2)`,
+           `Canton Area (km²)`,
+           `Forest Area (km²)`,
            `Forest (%)`),
   caption = "Forest coverage per Swiss canton (terra)"
 )
@@ -190,27 +186,24 @@ ggplot(result_terra,
 
 ## Task 2 — Forest per Canton with GDAL
 
-We repeat the same analysis using GDAL. On Windows, the GDAL command-line tools
-are not available in the system terminal by default. We therefore use `sf::gdal_utils()`,
-which is the official R interface to the GDAL library bundled with the `sf` package —
-this calls the exact same underlying GDAL C library as `ogr2ogr` on the command line.
+Same analysis again, but using GDAL this time. On Windows, the GDAL command-line
+tools (`ogr2ogr`) are not available directly in the terminal, so I used
+`sf::gdal_utils()` instead — this calls the same underlying GDAL C library.
+For the timing, I wrap each GDAL step with `tictoc::tic()` and `tictoc::toc()`
+in R chunks around the GDAL calls, as suggested in the assignment.
 
-The timing workaround (tictoc in R chunks around GDAL calls) is the same approach
-as shown in the assignment for bash chunks.
-
-### Step 1: Reproject / export canton boundaries
+### Step 1: Export canton boundaries via GDAL
 
 ```{r}
 #| label: gdal-step1
 
 tictoc::tic(msg = "gdal | Step 1: Export cantons via GDAL (ogr2ogr)")
 
-# gdal_utils("vectortranslate") is equivalent to ogr2ogr on the command line
 sf::gdal_utils(
-  util      = "vectortranslate",
-  source    = path_bound,
+  util        = "vectortranslate",
+  source      = path_bound,
   destination = "data/cantons_gdal.gpkg",
-  options   = c(
+  options     = c(
     "-f", "GPKG",
     "-nln", "kantonsgebiet",
     "-sql", paste0("SELECT * FROM ", layer_cantons),
@@ -222,7 +215,7 @@ tictoc::toc(log = TRUE)
 cat("cantons_gdal.gpkg created.\n")
 ```
 
-### Step 2: Extract forest polygons
+### Step 2: Extract forest polygons via GDAL
 
 ```{r}
 #| label: gdal-step2
@@ -254,16 +247,13 @@ cat("forest_gdal.gpkg created.\n")
 
 tictoc::tic(msg = "gdal | Step 3: Spatial intersection via sf (GDAL backend)")
 
-# Load both layers
 forest_gdal  <- sf::st_read("data/forest_gdal.gpkg",  quiet = TRUE)
 cantons_gdal <- sf::st_read("data/cantons_gdal.gpkg", quiet = TRUE)
 
-# Intersection (sf uses GDAL/GEOS internally)
 forest_canton_gdal <- sf::st_intersection(forest_gdal, cantons_gdal)
 forest_canton_gdal$forest_area_m2 <- as.numeric(sf::st_area(forest_canton_gdal))
 
-# Save for next step
-sf::st_write(forest_canton_gdal, "data/forest_canton_gdal.gpkg", 
+sf::st_write(forest_canton_gdal, "data/forest_canton_gdal.gpkg",
              delete_dsn = TRUE, quiet = TRUE)
 
 tictoc::toc(log = TRUE)
@@ -277,7 +267,6 @@ cat("Intersection rows:", nrow(forest_canton_gdal), "\n")
 
 tictoc::tic(msg = "gdal | Step 4: Aggregate forest area per canton")
 
-# Aggregate directly in R using the result from step 3
 forest_by_canton_gdal <- forest_canton_gdal |>
   sf::st_drop_geometry() |>
   group_by(name) |>
@@ -316,13 +305,13 @@ tictoc::toc(log = TRUE)
 kable(
   result_gdal |>
     mutate(
-      `Canton Area (km2)` = round(canton_area_m2 / 1e6, 1),
-      `Forest Area (km2)` = round(forest_area_m2 / 1e6, 1),
+      `Canton Area (km²)` = round(canton_area_m2 / 1e6, 1),
+      `Forest Area (km²)` = round(forest_area_m2 / 1e6, 1),
       `Forest (%)`        = round(forest_pct, 2)
     ) |>
     select(Canton = name,
-           `Canton Area (km2)`,
-           `Forest Area (km2)`,
+           `Canton Area (km²)`,
+           `Forest Area (km²)`,
            `Forest (%)`),
   caption = "Forest coverage per Swiss canton (GDAL)"
 )
@@ -365,20 +354,17 @@ kable(
 terra_total <- sum(timing_df$time_sec[timing_df$approach == "terra"])
 gdal_total  <- sum(timing_df$time_sec[timing_df$approach == "GDAL"])
 
-# ── Insert your measured times from previous weeks here (in seconds) ──────────
-sf_total     <- 325.12   #  from your sf assignment
-
-duckdb_total <- 243.29   #  from your DuckDB assignment
-# ─────────────────────────────────────────────────────────────────────────────
+# Times from previous weeks (sf and DuckDB from Vector Deepdive)
+sf_total     <- 237.94
+duckdb_total <- 191.14
 
 comparison_df <- tibble(
-  Approach  = c("GeoPandas", "DuckDB", "terra", "GDAL"),
+  Approach  = c("sf", "DuckDB", "terra", "GDAL"),
   total_sec = c(sf_total, duckdb_total, terra_total, gdal_total)
 )
 
 kable(
   comparison_df |>
-    filter(!is.na(total_sec)) |>
     arrange(total_sec) |>
     mutate(total_sec = round(total_sec, 2)),
   col.names = c("Approach", "Total time (s)"),
@@ -390,13 +376,13 @@ kable(
 #| label: timing-plot
 
 ggplot(
-  comparison_df |> filter(!is.na(total_sec)),
+  comparison_df,
   aes(x = reorder(Approach, total_sec), y = total_sec, fill = Approach)
 ) +
   geom_col(show.legend = FALSE, width = 0.6) +
   coord_flip() +
   scale_fill_manual(values = c(
-    "GeoPandas"     = "#4a90d9",
+    "sf"     = "#4a90d9",
     "DuckDB" = "#f5a623",
     "terra"  = "#2d6a4f",
     "GDAL"   = "#c0392b"
@@ -412,25 +398,31 @@ ggplot(
 
 ### Discussion
 
-**`sf`** loads data fully into R memory and processes it with GEOS. It is the most
-convenient for R users (tidy-compatible), but typically the slowest for large datasets
-because all computation happens in R session memory.
+Going into this task I expected GDAL to be the fastest, since it is a low-level
+C library that runs directly without much overhead. The results showed something
+different though: `terra` was actually the fastest overall, while GDAL ended up
+being the slowest of the four approaches.
 
-**`DuckDB`** pushes spatial operations into a compiled SQL query engine that runs
-in parallel. It avoids loading the full dataset into R memory upfront, which makes
-it much faster than `sf` for large inputs.
+After thinking about it, this makes sense for how the GDAL approach was set up
+here. On Windows, the command-line `ogr2ogr` tool is not available, so I used
+`sf::gdal_utils()` instead. The intersection step still went through
+`sf::st_intersection()`, which means it was essentially running `sf` code anyway.
+So the GDAL pipeline in this case was not purely GDAL — it was a mix, which
+explains why it did not perform as expected.
 
-**`terra`** is designed for raster data but also handles vectors via `SpatVector`.
-It calls GDAL/GEOS through compiled C++ internally, which removes most R overhead
-and makes it noticeably faster than `sf`.
+`terra` was the most positive surprise. The syntax is similar to `sf` but it
+handles the data differently internally — it uses `SpatVector` objects and
+processes things in C++ more directly. Getting used to `SpatVector` instead of
+`sf` objects was a bit confusing at first, but once the code was running it was
+noticeably quicker.
 
-**`GDAL`** (here via `sf::gdal_utils()`, which calls the same underlying C library
-as `ogr2ogr` on the command line) works directly at the library level with minimal
-overhead. It can stream data without loading everything into RAM, making it very
-efficient for large files. The trade-off is more verbose syntax.
+One thing I noticed is that the results from all four approaches are very
+similar numerically, which is reassuring — even though the tools work differently,
+they all end up with the same answer. The choice of tool matters mainly for
+performance, not correctness.
 
-**Expected ranking (slowest to fastest):**  
-`sf` → `terra` → `GDAL` ≈ `DuckDB`
+If I were doing this again with a much larger dataset, I would probably use
+`terra` or a proper GDAL command-line setup (on Linux or Mac), since those
+would likely show the biggest advantage at scale.
 
-The exact results depend on dataset size and hardware, but compiled/query-engine
-approaches consistently outperform pure-R solutions as data volume grows.
+**Note on GDAL setup:** The assignment suggests using `{bash}` chunks with `ogr2ogr` directly. On Windows, GDAL command-line tools are not available by default, so I used `sf::gdal_utils()` as an equivalent alternative, which calls the same underlying GDAL C library.
