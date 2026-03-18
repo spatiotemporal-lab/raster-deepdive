@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Chantal">
-<meta name="dcterms.date" content="2026-03-17">
+<meta name="dcterms.date" content="2026-03-18">
 
 <title>Raster Processing: terra &amp; GDAL – Raster &amp; GDAL Processing</title>
 <style>
@@ -167,7 +167,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">March 17, 2026</p>
+      <p class="date">March 18, 2026</p>
     </div>
   </div>
   
@@ -227,7 +227,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>tictoc<span class="sc">::</span><span class="fu">toc</span>(<span class="at">log =</span> <span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-stdout">
-<pre><code>terra | Step 1: Load canton boundaries: 0.09 sec elapsed</code></pre>
+<pre><code>terra | Step 1: Load canton boundaries: 0.13 sec elapsed</code></pre>
 </div>
 <details class="code-fold">
 <summary>Code</summary>
@@ -264,7 +264,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>tictoc<span class="sc">::</span><span class="fu">toc</span>(<span class="at">log =</span> <span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-stdout">
-<pre><code>terra | Step 2: Load and filter forest polygons: 17.81 sec elapsed</code></pre>
+<pre><code>terra | Step 2: Load and filter forest polygons: 43.27 sec elapsed</code></pre>
 </div>
 <details class="code-fold">
 <summary>Code</summary>
@@ -315,7 +315,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>tictoc<span class="sc">::</span><span class="fu">toc</span>(<span class="at">log =</span> <span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-stdout">
-<pre><code>terra | Step 3: Verify CRS alignment: 0.02 sec elapsed</code></pre>
+<pre><code>terra | Step 3: Verify CRS alignment: 0.04 sec elapsed</code></pre>
 </div>
 </div>
 </section>
@@ -333,7 +333,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>tictoc<span class="sc">::</span><span class="fu">toc</span>(<span class="at">log =</span> <span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-stdout">
-<pre><code>terra | Step 4: Intersect forest with cantons: 189.52 sec elapsed</code></pre>
+<pre><code>terra | Step 4: Intersect forest with cantons: 137.93 sec elapsed</code></pre>
 </div>
 <details class="code-fold">
 <summary>Code</summary>
@@ -376,7 +376,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb28-25"><a href="#cb28-25" aria-hidden="true" tabindex="-1"></a>tictoc<span class="sc">::</span><span class="fu">toc</span>(<span class="at">log =</span> <span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-stdout">
-<pre><code>terra | Step 5: Calculate forest % per canton: 75.14 sec elapsed</code></pre>
+<pre><code>terra | Step 5: Calculate forest % per canton: 41.23 sec elapsed</code></pre>
 </div>
 </div>
 </section>
@@ -630,7 +630,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb32-16"><a href="#cb32-16" aria-hidden="true" tabindex="-1"></a>tictoc<span class="sc">::</span><span class="fu">toc</span>(<span class="at">log =</span> <span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-stdout">
-<pre><code>gdal | Step 1: Export cantons via GDAL (ogr2ogr): 0.28 sec elapsed</code></pre>
+<pre><code>gdal | Step 1: Export cantons via GDAL (ogr2ogr): 0.3 sec elapsed</code></pre>
 </div>
 <details class="code-fold">
 <summary>Code</summary>
@@ -665,7 +665,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb36-17"><a href="#cb36-17" aria-hidden="true" tabindex="-1"></a>tictoc<span class="sc">::</span><span class="fu">toc</span>(<span class="at">log =</span> <span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-stdout">
-<pre><code>gdal | Step 2: Extract forest polygons via GDAL: 21.77 sec elapsed</code></pre>
+<pre><code>gdal | Step 2: Extract forest polygons via GDAL: 34.18 sec elapsed</code></pre>
 </div>
 <details class="code-fold">
 <summary>Code</summary>
@@ -705,7 +705,7 @@ all geometries</code></pre>
 <span id="cb42-7"><a href="#cb42-7" aria-hidden="true" tabindex="-1"></a>tictoc<span class="sc">::</span><span class="fu">toc</span>(<span class="at">log =</span> <span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-stdout">
-<pre><code>gdal | Step 3: Spatial intersection via sf (GDAL backend): 239.77 sec elapsed</code></pre>
+<pre><code>gdal | Step 3: Spatial intersection via sf (GDAL backend): 210.5 sec elapsed</code></pre>
 </div>
 <details class="code-fold">
 <summary>Code</summary>
@@ -732,7 +732,7 @@ all geometries</code></pre>
 <span id="cb46-9"><a href="#cb46-9" aria-hidden="true" tabindex="-1"></a>tictoc<span class="sc">::</span><span class="fu">toc</span>(<span class="at">log =</span> <span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-stdout">
-<pre><code>gdal | Step 4: Aggregate forest area per canton: 0.02 sec elapsed</code></pre>
+<pre><code>gdal | Step 4: Aggregate forest area per canton: 0.03 sec elapsed</code></pre>
 </div>
 <details class="code-fold">
 <summary>Code</summary>
@@ -766,7 +766,7 @@ all geometries</code></pre>
 <span id="cb50-16"><a href="#cb50-16" aria-hidden="true" tabindex="-1"></a>tictoc<span class="sc">::</span><span class="fu">toc</span>(<span class="at">log =</span> <span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-stdout">
-<pre><code>gdal | Step 5: Join and compute percentages in R: 0.2 sec elapsed</code></pre>
+<pre><code>gdal | Step 5: Join and compute percentages in R: 0.11 sec elapsed</code></pre>
 </div>
 </div>
 <div class="cell">
@@ -1013,52 +1013,52 @@ all geometries</code></pre>
 <tbody>
 <tr class="odd">
 <td style="text-align: left;">terra | Step 1: Load canton boundaries</td>
-<td style="text-align: right;">0.09</td>
+<td style="text-align: right;">0.13</td>
 <td style="text-align: left;">terra</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">terra | Step 2: Load and filter forest polygons</td>
-<td style="text-align: right;">17.81</td>
+<td style="text-align: right;">43.27</td>
 <td style="text-align: left;">terra</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">terra | Step 3: Verify CRS alignment</td>
-<td style="text-align: right;">0.02</td>
+<td style="text-align: right;">0.04</td>
 <td style="text-align: left;">terra</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">terra | Step 4: Intersect forest with cantons</td>
-<td style="text-align: right;">189.52</td>
+<td style="text-align: right;">137.93</td>
 <td style="text-align: left;">terra</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">terra | Step 5: Calculate forest % per canton</td>
-<td style="text-align: right;">75.14</td>
+<td style="text-align: right;">41.23</td>
 <td style="text-align: left;">terra</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">gdal | Step 1: Export cantons via GDAL (ogr2ogr)</td>
-<td style="text-align: right;">0.28</td>
+<td style="text-align: right;">0.30</td>
 <td style="text-align: left;">GDAL</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">gdal | Step 2: Extract forest polygons via GDAL</td>
-<td style="text-align: right;">21.77</td>
+<td style="text-align: right;">34.18</td>
 <td style="text-align: left;">GDAL</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">gdal | Step 3: Spatial intersection via sf (GDAL backend)</td>
-<td style="text-align: right;">239.77</td>
+<td style="text-align: right;">210.50</td>
 <td style="text-align: left;">GDAL</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">gdal | Step 4: Aggregate forest area per canton</td>
-<td style="text-align: right;">0.02</td>
+<td style="text-align: right;">0.03</td>
 <td style="text-align: left;">GDAL</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">gdal | Step 5: Join and compute percentages in R</td>
-<td style="text-align: right;">0.20</td>
+<td style="text-align: right;">0.11</td>
 <td style="text-align: left;">GDAL</td>
 </tr>
 </tbody>
@@ -1102,16 +1102,16 @@ all geometries</code></pre>
 </thead>
 <tbody>
 <tr class="odd">
+<td style="text-align: left;">terra</td>
+<td style="text-align: right;">222.60</td>
+</tr>
+<tr class="even">
 <td style="text-align: left;">DuckDB</td>
 <td style="text-align: right;">243.29</td>
 </tr>
-<tr class="even">
-<td style="text-align: left;">GDAL</td>
-<td style="text-align: right;">262.04</td>
-</tr>
 <tr class="odd">
-<td style="text-align: left;">terra</td>
-<td style="text-align: right;">282.58</td>
+<td style="text-align: left;">GDAL</td>
+<td style="text-align: right;">245.12</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">GeoPandas</td>
@@ -1240,7 +1240,7 @@ all geometries</code></pre>
     }
       var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
       var mailtoRegex = new RegExp(/^mailto:/);
-        var filterRegex = new RegExp('/' + window.location.host + '/');
+        var filterRegex = new RegExp("https:\/\/spatiotemporal-lab\.github\.io\/raster-deepdive\/");
       var isInternal = (href) => {
           return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
       }
